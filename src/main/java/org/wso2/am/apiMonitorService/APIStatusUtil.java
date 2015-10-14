@@ -19,13 +19,13 @@ package org.wso2.am.apiMonitorService;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.ConfigurationContext;
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.am.apiMonitorService.beans.TenantStatus;
-import org.wso2.carbon.rest.api.APIData;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.multitenancy.utils.TenantAxisUtils;
+import org.wso2.carbon.rest.api.APIData;
 import org.wso2.carbon.rest.api.service.RestApiAdmin;
-import org.apache.commons.logging.Log;
 import org.wso2.carbon.utils.ConfigurationContextService;
 
 import java.rmi.RemoteException;
@@ -34,10 +34,11 @@ import java.util.Map;
 public class APIStatusUtil {
     private static final Log log = LogFactory.getLog(APIStatusUtil.class);
     private RestApiAdmin restApiAdmin;
-   // static final String backendURLl = "local:///services/";
-   static final String backendURLl = "local:///services/";
+    // static final String backendURLl = "local:///services/";
+    static final String backendURLl = "local:///services/";
+
     public APIStatusUtil() throws AxisFault {
-        restApiAdmin =new RestApiAdmin();
+        restApiAdmin = new RestApiAdmin();
     }
 
     public int getDeployedApiStats() throws RemoteException {
@@ -48,20 +49,29 @@ public class APIStatusUtil {
         return restApiAdmin.getApiNames();
     }
 
-    public boolean isApiExists(String apiName)
-    {
-        boolean isApiExists= false;
-        APIData apiData=restApiAdmin.getApiByName(apiName);
-        if(apiData.getName()!=null)
-        {
-            isApiExists= true;
+    public boolean isApiExists(String apiName) {
+        boolean isApiExists = false;
+        try {
+            APIData apiData = restApiAdmin.getApiByName(apiName);
+            if (apiData.getName() != null) {
+                isApiExists = true;
+            }
+        } catch (NullPointerException e) {
+            log.info("Api " + apiName + " not found ");
+            isApiExists = false;
         }
         return isApiExists;
     }
 
-    public APIData getAPIDataByName(String apiName)
-    {
-        APIData apiData=restApiAdmin.getApiByName(apiName);
+    public APIData getAPIDataByName(String apiName) {
+        APIData apiData;
+        try {
+            apiData = restApiAdmin.getApiByName(apiName);
+        } catch (NullPointerException e) {
+            log.info("Api " + apiName + " not found ");
+            apiData = null;
+        }
+
         return apiData;
     }
 

@@ -21,7 +21,7 @@ import org.wso2.carbon.rest.api.APIData;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "TenantStatus")
+@XmlRootElement(name = "apiStatus")
 public class APIDeployStatus {
     boolean isApiExists = false;
     APIData apiData;
