@@ -34,8 +34,6 @@ import java.util.Map;
 public class APIStatusUtil {
     private static final Log log = LogFactory.getLog(APIStatusUtil.class);
     private RestApiAdmin restApiAdmin;
-    // static final String backendURLl = "local:///services/";
-    static final String backendURLl = "local:///services/";
 
     public APIStatusUtil() throws AxisFault {
         restApiAdmin = new RestApiAdmin();
