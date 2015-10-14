@@ -19,9 +19,10 @@
 package org.wso2.am.apiMonitorService;
 
 
+import org.apache.axis2.AxisFault;
+import org.wso2.am.apiMonitorService.beans.APIDeployStatus;
 import org.wso2.am.apiMonitorService.beans.APIStats;
 import org.wso2.am.apiMonitorService.beans.TenantStatus;
-import org.wso2.carbon.apimgt.api.model.APIStatus;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,7 +39,15 @@ import java.rmi.RemoteException;
  * ghost status or not.
  */
 public class ApiStatusMonitorService {
-    public ApiStatusMonitorService() {
+
+    APIStatusUtil apiStatusUtil;
+    APIStats stats;
+    APIDeployStatus apiStatus;
+
+    public ApiStatusMonitorService() throws AxisFault {
+        apiStatusUtil = new APIStatusUtil();
+        stats = new APIStats();
+        apiStatus = new APIDeployStatus();
     }
 
     @Path("tenant-status/{tenantDomain}")
@@ -53,6 +62,18 @@ public class ApiStatusMonitorService {
 
     }
 
+    @Path("api-data/{apiName}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    /**
+     * Provide the  status of tenant.
+     */
+    public APIDeployStatus isAPILoaded(@PathParam("apiName") String apiName) {
+        apiStatus.setIsApiExists(apiStatusUtil.isApiExists(apiName));
+        apiStatus.setApiData(apiStatusUtil.getAPIDataByName(apiName));
+        return apiStatus;
+    }
+
     @Path("api-info/{tenantDomain}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -60,16 +81,11 @@ public class ApiStatusMonitorService {
      * Provide the  status of api.
      */
     public APIStats getApiCount(@PathParam("tenantDomain") String tenantDomain) throws
-                                                                              RemoteException {
-       APIStatusUtil apiStatusUtil = new APIStatusUtil();
-        APIStats stats = new APIStats();
+                                                                                RemoteException {
         stats.setDeployedApiCount(apiStatusUtil.getDeployedApiStats());
         stats.setListOfApiNames(apiStatusUtil.getDeployedApiNames());
-       return stats;
+        return stats;
     }
-
-
-
 
 
 }

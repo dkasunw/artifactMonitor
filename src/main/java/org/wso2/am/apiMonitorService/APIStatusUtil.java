@@ -21,6 +21,7 @@ import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.am.apiMonitorService.beans.TenantStatus;
+import org.wso2.carbon.rest.api.APIData;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.multitenancy.utils.TenantAxisUtils;
 import org.wso2.carbon.rest.api.service.RestApiAdmin;
@@ -45,6 +46,23 @@ public class APIStatusUtil {
 
     public String[] getDeployedApiNames() throws RemoteException {
         return restApiAdmin.getApiNames();
+    }
+
+    public boolean isApiExists(String apiName)
+    {
+        boolean isApiExists= false;
+        APIData apiData=restApiAdmin.getApiByName(apiName);
+        if(apiData.getName()!=null)
+        {
+            isApiExists= true;
+        }
+        return isApiExists;
+    }
+
+    public APIData getAPIDataByName(String apiName)
+    {
+        APIData apiData=restApiAdmin.getApiByName(apiName);
+        return apiData;
     }
 
     /**
