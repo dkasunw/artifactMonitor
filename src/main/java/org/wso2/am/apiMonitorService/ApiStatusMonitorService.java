@@ -31,7 +31,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.rmi.RemoteException;
 
-@Path("/")
+@Path("/api_status/")
 /**
  * REST web service that provide the tenant status (TenantStatus and the web-app status(WebAppStatus).
  * TenantStatus is include whether the Tenant context is loaded or not.
@@ -86,6 +86,8 @@ public class ApiStatusMonitorService {
         stats.setListOfApiNames(apiStatusUtil.getDeployedApiNames());
         return stats;
     }
+
+
 
 
 }

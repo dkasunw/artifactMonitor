@@ -25,7 +25,10 @@ import org.wso2.am.apiMonitorService.beans.TenantStatus;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.multitenancy.utils.TenantAxisUtils;
 import org.wso2.carbon.rest.api.APIData;
+import org.wso2.carbon.rest.api.APIException;
 import org.wso2.carbon.rest.api.service.RestApiAdmin;
+import org.wso2.carbon.apimgt.gateway.utils.RESTAPIAdminClient;
+import org.wso2.carbon.apimgt.gateway.service.APIGatewayAdmin;
 import org.wso2.carbon.utils.ConfigurationContextService;
 
 import java.rmi.RemoteException;
@@ -34,9 +37,17 @@ import java.util.Map;
 public class APIStatusUtil {
     private static final Log log = LogFactory.getLog(APIStatusUtil.class);
     private RestApiAdmin restApiAdmin;
+    private RESTAPIAdminClient restapiAdminClient;
+    private APIGatewayAdmin apiGatewayAdmin;
 
     public APIStatusUtil() throws AxisFault {
         restApiAdmin = new RestApiAdmin();
+        apiGatewayAdmin = new APIGatewayAdmin();
+    }
+
+    protected void setAdminClient(String apiProviderName, String apiName, String apiVersion)
+            throws AxisFault {
+        restapiAdminClient = new RESTAPIAdminClient(apiProviderName,apiName,apiVersion);
     }
 
     public int getDeployedApiStats() throws RemoteException {
@@ -67,6 +78,39 @@ public class APIStatusUtil {
             apiData = restApiAdmin.getApiByName(apiName);
         } catch (NullPointerException e) {
             log.info("Api " + apiName + " not found ");
+            apiData = null;
+        }
+
+        return apiData;
+    }
+
+
+    public boolean isApiExistsByTenant(String tenantDomain, String apiName)
+            throws APIException, AxisFault {
+        boolean isApiExists = false;
+        try {
+            org.wso2.carbon.rest.api.stub.types.carbon.APIData apiData = restapiAdminClient.getApi(tenantDomain);
+            if (apiData.getName() != null) {
+                isApiExists = true;
+            }
+        } catch (NullPointerException e) {
+            log.info("Api " + apiName + " not found ");
+            isApiExists = false;
+        }
+        return isApiExists;
+    }
+
+
+
+
+    public org.wso2.carbon.rest.api.stub.types.carbon.APIData getAPIDataByTenantByName(
+            String tenantDomain)
+            throws APIException, AxisFault {
+        org.wso2.carbon.rest.api.stub.types.carbon.APIData apiData;
+        try {
+            apiData = restapiAdminClient.getApi(tenantDomain);
+        } catch (NullPointerException e) {
+            log.info("Api " + " not found ");
             apiData = null;
         }
 

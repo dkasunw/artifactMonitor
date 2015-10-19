@@ -26,10 +26,13 @@
     <jaxrs:server id="ApiStatusMonitorService" address="/">
         <jaxrs:serviceBeans>
             <ref bean="apiStatusMonitor"/>
+            <ref bean="webAppStatusMonitor"/>
         </jaxrs:serviceBeans>
     </jaxrs:server>
     <bean id="apiStatusMonitor"
           class="org.wso2.am.apiMonitorService.ApiStatusMonitorService"/>
+    <bean id="webAppStatusMonitor"
+          class="org.wso2.am.apiMonitorService.WebAppStatusMonitorService"/>
 
 
 </beans>
