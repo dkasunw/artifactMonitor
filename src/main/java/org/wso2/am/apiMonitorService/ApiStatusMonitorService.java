@@ -23,6 +23,7 @@ import org.apache.axis2.AxisFault;
 import org.wso2.am.apiMonitorService.beans.APIDeployStatus;
 import org.wso2.am.apiMonitorService.beans.APIStats;
 import org.wso2.am.apiMonitorService.beans.TenantStatus;
+import org.wso2.carbon.apimgt.api.APIManagementException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -45,10 +46,22 @@ public class ApiStatusMonitorService {
     APIDeployStatus apiStatus;
 
     public ApiStatusMonitorService() throws AxisFault {
-        apiStatusUtil = new APIStatusUtil();
+       // apiStatusUtil = new APIStatusUtil();
         stats = new APIStats();
         apiStatus = new APIDeployStatus();
     }
+
+//    @Path("initiate-client/{apiProviderName}/{}")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    /**
+//     * Provide the  status of tenant.
+//     */
+//    public (@PathParam("tenantDomain") String tenantDomain) {
+//        return APIStatusUtil.getTenantStatus(tenantDomain);
+//
+//
+//    }
 
     @Path("tenant-status/{tenantDomain}")
     @GET
@@ -81,7 +94,8 @@ public class ApiStatusMonitorService {
      * Provide the  status of api.
      */
     public APIStats getApiCount(@PathParam("tenantDomain") String tenantDomain) throws
-                                                                                RemoteException {
+                                                                                RemoteException,
+                                                                                APIManagementException {
         stats.setDeployedApiCount(apiStatusUtil.getDeployedApiStats());
         stats.setListOfApiNames(apiStatusUtil.getDeployedApiNames());
         return stats;

@@ -22,13 +22,16 @@ import org.apache.axis2.context.ConfigurationContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.am.apiMonitorService.beans.TenantStatus;
+import org.wso2.carbon.apimgt.api.APIManagementException;
+import org.wso2.carbon.apimgt.gateway.service.APIGatewayAdmin;
+import org.wso2.carbon.apimgt.gateway.utils.RESTAPIAdminClient;
+import org.wso2.carbon.apimgt.impl.APIManagerFactory;
+import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.multitenancy.utils.TenantAxisUtils;
 import org.wso2.carbon.rest.api.APIData;
 import org.wso2.carbon.rest.api.APIException;
 import org.wso2.carbon.rest.api.service.RestApiAdmin;
-import org.wso2.carbon.apimgt.gateway.utils.RESTAPIAdminClient;
-import org.wso2.carbon.apimgt.gateway.service.APIGatewayAdmin;
 import org.wso2.carbon.utils.ConfigurationContextService;
 
 import java.rmi.RemoteException;
@@ -40,22 +43,28 @@ public class APIStatusUtil {
     private RESTAPIAdminClient restapiAdminClient;
     private APIGatewayAdmin apiGatewayAdmin;
 
-    public APIStatusUtil() throws AxisFault {
+    public APIStatusUtil()
+            throws AxisFault {
+       // apiGatewayAdmin.getApiForTenant() = new APIGatewayAdmin();
         restApiAdmin = new RestApiAdmin();
-        apiGatewayAdmin = new APIGatewayAdmin();
+
     }
 
-    protected void setAdminClient(String apiProviderName, String apiName, String apiVersion)
-            throws AxisFault {
-        restapiAdminClient = new RESTAPIAdminClient(apiProviderName,apiName,apiVersion);
-    }
+
 
     public int getDeployedApiStats() throws RemoteException {
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.com");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("admin");
+APIStatusUtil.getTenantStatus("wso2.com");
         return restApiAdmin.getAPICount();
     }
 
-    public String[] getDeployedApiNames() throws RemoteException {
+    public String[] getDeployedApiNames() throws RemoteException, APIManagementException {
+        APIManagerFactory.getInstance().getAPIProvider("adomi");
         return restApiAdmin.getApiNames();
+
     }
 
     public boolean isApiExists(String apiName) {
@@ -101,8 +110,6 @@ public class APIStatusUtil {
     }
 
 
-
-
     public org.wso2.carbon.rest.api.stub.types.carbon.APIData getAPIDataByTenantByName(
             String tenantDomain)
             throws APIException, AxisFault {
@@ -113,9 +120,18 @@ public class APIStatusUtil {
             log.info("Api " + " not found ");
             apiData = null;
         }
-
         return apiData;
     }
+
+    public org.wso2.carbon.rest.api.stub.types.carbon.APIData getAPIDataByTenatDomain(String tenatDomain) throws AxisFault {
+        return restapiAdminClient.getApi(tenatDomain);
+    }
+
+    public org.wso2.carbon.rest.api.stub.types.carbon.APIData getApi() throws AxisFault {
+        return restapiAdminClient.getApi();
+    }
+
+
 
     /**
      * Check  the given tenant is loaded.

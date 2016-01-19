@@ -17,5 +17,61 @@
 */
 package org.wso2.am.apiMonitorService.beans;
 
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "apiStatus")
 public class APIStatusData {
+
+    boolean isApiExists = false;
+    String providerName;
+    String apiName;
+    String version;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    String status;
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public void setProviderName(String providerName) {
+        this.providerName = providerName;
+    }
+
+
+    public String getApiName() {
+        return apiName;
+    }
+
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
+    }
+
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+
+    public void setIsApiExists(boolean isApiExists) {
+        this.isApiExists = isApiExists;
+    }
+
+    public boolean getIsApiExists() {
+        return isApiExists;
+    }
+
+
+
 }

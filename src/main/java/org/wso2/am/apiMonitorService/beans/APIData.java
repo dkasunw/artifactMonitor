@@ -17,5 +17,41 @@
 */
 package org.wso2.am.apiMonitorService.beans;
 
+import org.wso2.carbon.apimgt.api.model.API;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "apiData")
 public class APIData {
+
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public void setProviderName(String providerName) {
+        this.providerName = providerName;
+    }
+
+    String providerName;
+
+    public String getApiName() {
+        return apiName;
+    }
+
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
+    }
+
+    String apiName;
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    String version;
+
 }

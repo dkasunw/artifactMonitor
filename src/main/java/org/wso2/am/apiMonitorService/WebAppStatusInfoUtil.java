@@ -25,15 +25,18 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.am.apiMonitorService.beans.WebAppData;
 import org.wso2.am.apiMonitorService.beans.WebAppDeployStatus;
 import org.wso2.am.apiMonitorService.beans.WebAppStatus;
+import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.core.internal.CarbonCoreDataHolder;
 import org.wso2.carbon.core.multitenancy.utils.TenantAxisUtils;
 import org.wso2.carbon.utils.ConfigurationContextService;
 import org.wso2.carbon.webapp.mgt.WebApplication;
 import org.wso2.carbon.webapp.mgt.WebApplicationsHolder;
+import org.wso2.carbon.webapp.mgt.WebappAdmin;
+import org.wso2.carbon.webapp.mgt.utils.WebAppUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -53,8 +56,8 @@ public class WebAppStatusInfoUtil {
      */
     private ConfigurationContext getServerConfigurationContext() {
         ConfigurationContextService configurationContext =
-                (ConfigurationContextService) PrivilegedCarbonContext.getCurrentContext().getThreadLocalCarbonContext().
-                        getOSGiService(ConfigurationContextService.class);
+                (ConfigurationContextService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(ConfigurationContextService.class);
         return configurationContext.getServerConfigContext();
     }
 
@@ -80,66 +83,96 @@ public class WebAppStatusInfoUtil {
     }
 
 
-//    protected WebAppStatus getWebAppStatus(String tenantDomain, String webAppName) {
-//        WebAppStatus webAppStatus = new WebAppStatus();
-//        ConfigurationContext tenantConfigurationServerContext = getTenantConfigurationServerContext(tenantDomain);
-//        if (tenantConfigurationServerContext != null) {
-//            webAppStatus.setTenantStatus(new TenantStatus(true));
-//            log.info("Tenant " + tenantDomain + " configuration context is loaded.");
-//            WebApplicationsHolder webApplicationsHolder = (WebApplicationsHolder) ((HashMap)
-//                    tenantConfigurationServerContext.getLocalProperty(CARBON_WEBAPPS_HOLDER_LIST)).get(WEBAPPS);
-//            Map<String, WebApplication> startedWebAppMap = webApplicationsHolder.getStartedWebapps();
-//            if (startedWebAppMap != null) {
-//                WebApplication webApplication = startedWebAppMap.get(webAppName);
-//                if (webApplication != null) {
-//                    webAppStatus.setWebAppStarted(true);
-//                    log.info("Tenant " + tenantDomain + " Web-app: " + webAppName + " is available in configuration context.");
-//                    boolean isWebAppGhost = Boolean.parseBoolean((String) webApplication.getProperty(GHOST_WEB_APP));
-//                    log.info("Tenant " + tenantDomain + " Web-app: " + webAppName + " is in Ghost deployment status :" +
-//                            isWebAppGhost);
-//                    webAppStatus.setWebAppGhost(isWebAppGhoxst);
-//                } else {
-//                    log.info("Given web-app:" + webAppName + " for tenant:" + tenantDomain + " not found in started state");
-//                    webAppStatus.setWebAppStarted(false);
-//                }
-//            } else {
-//                log.info("Tenant " + tenantDomain + " has no started web-apps.");
-//                webAppStatus.setWebAppStarted(false);
-//            }
-//        } else {
-//            log.info("Tenant " + tenantDomain + " configuration context is not loaded.");
-//            webAppStatus.setTenantStatus(new TenantStatus(false));
-//        }
-//        return webAppStatus;
-//    }
 
-    protected WebAppDeployStatus  getWebAppDeploymentStatus(String webAppName) {
+    protected  WebAppStatus getWebAppStatus(String tenantDomain, String webAppName) {
+        WebAppStatus webAppStatus = new WebAppStatus();
+        ConfigurationContext tenantConfigurationServerContext = getTenantConfigurationServerContext(tenantDomain);
+        if (tenantConfigurationServerContext != null) {
+           // webAppStatus.setTenantStatus(new TenantStatus(true));
+            //log.info("Tenant " + tenantDomain + " configuration context is loaded.");
+            WebApplicationsHolder webApplicationsHolder = (WebApplicationsHolder) ((HashMap)
+                                                                                           tenantConfigurationServerContext.getLocalProperty(CARBON_WEBAPPS_HOLDER_LIST)).get(WEBAPPS);
+            Map<String, WebApplication> startedWebAppMap = webApplicationsHolder.getStartedWebapps();
+            if (startedWebAppMap != null) {
+                WebApplication webApplication = startedWebAppMap.get(webAppName);
+                if (webApplication != null) {
+                   // webAppStatus.setWebAppStarted(true);
+                   // log.info("Tenant " + tenantDomain + " Web-app: " + webAppName + " is available in configuration
+                    // context.");
+                    boolean isWebAppGhost = Boolean.parseBoolean((String) webApplication.getProperty(GHOST_WEB_APP));
+                   // log.info("Tenant " + tenantDomain + " Web-app: " + webAppName + " is in Ghost deployment status
+                    // :" +
+                            // isWebAppGhost);
+                   // webAppStatus.setWebAppGhost(isWebAppGhost);
+                } else {
+                 //   log.info("Given web-app:" + webAppName + " for tenant:" + tenantDomain + " not found in started
+                    // state");
+                   // webAppStatus.setWebAppStarted(false);
+                }
+            } else {
+                //log.info("Tenant " + tenantDomain + " has no started web-apps.");
+                //webAppStatus.setWebAppStarted(false);
+            }
+        } else {
+//            webAppStatus.setTenantStatus(new TenantStatus(false));
+        }
+        return webAppStatus;
+    }
+
+
+
+
+    protected WebAppDeployStatus getWebAppDeploymentStatus(String webAppName) {
         Map<String, WebApplication> startedWebAppMap = new HashMap<>();
         Map<String, WebApplication> faultyWebAppMap = new HashMap<>();
         Map<String, WebApplication> stoppedWebAppMap = new HashMap<>();
         Map<String, WebApplication> allWebAppMap = new HashMap<>();
+        WebAppUtils.getAllWebappHolders(getServerConfigurationContext());
         WebApplication selectedWebApp;
         WebAppDeployStatus webAppDeployStatus = new WebAppDeployStatus();
-WebAppData webAppData = new WebAppData();
-         startedWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getStartedWebapps();
-        faultyWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getFaultyWebapps();
-        stoppedWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getStoppedWebapps();
-        if(!(startedWebAppMap.size()<=0)) {
+
+       // ConfigurationContext tenantConfigurationServerContext = getTenantConfigurationServerContext("wso2.com");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.com");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("admin");
+        PrivilegedCarbonContext.startTenantFlow();
+        CarbonCoreDataHolder carbonCoreDataHolder = CarbonCoreDataHolder.getInstance();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            TenantAxisUtils
+                    .getTenantConfigurationContext("wso2.com", carbonCoreDataHolder.getMainServerConfigContext());
+        } catch (OutOfMemoryError e) {
+            // If OutOfMemoryError during tenant loading we will throw a RuntimeException to notify server admin
+            String msg = "OutOfMemoryError while Eager loading tenant : " + "wso2.com";
+            throw new RuntimeException(msg, e);
+        } catch (Throwable e) {
+
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+
+
+        ConfigurationContext tenantConfigurationServerContext = getTenantConfigurationServerContext("wso2.com");
+        WebAppData webAppData = new WebAppData();
+        ConfigurationContextService configurationContext =
+                (ConfigurationContextService) PrivilegedCarbonContext.getThreadLocalCarbonContext().
+                        getOSGiService(ConfigurationContextService.class, null);
+        ConfigurationContext serverConfigurationContext = configurationContext.getServerConfigContext();
+        WebApplicationsHolder webApplicationsHolder = (WebApplicationsHolder) ((HashMap)
+                 serverConfigurationContext.getLocalProperty("carbon.webapps.holderlist")).get("webapps");
+        startedWebAppMap =webApplicationsHolder.getStartedWebapps();
+        faultyWebAppMap =webApplicationsHolder.getFaultyWebapps();
+        stoppedWebAppMap =webApplicationsHolder.getStoppedWebapps();
+        if (!(startedWebAppMap.size() <= 0)) {
             allWebAppMap.putAll(startedWebAppMap);
         }
-        if(stoppedWebAppMap.size()<=0) {
+        if (stoppedWebAppMap.size() <= 0) {
             allWebAppMap.putAll(startedWebAppMap);
         }
-        if(!(faultyWebAppMap.size()<=0)) {
+        if (!(faultyWebAppMap.size() <= 0)) {
             allWebAppMap.putAll(faultyWebAppMap);
         }
-        selectedWebApp=allWebAppMap.get(webAppName);
+        selectedWebApp = allWebAppMap.get(webAppName);
         webAppDeployStatus.setIsWebAppExists(allWebAppMap.containsKey(webAppName));
         webAppData.setContextPath(selectedWebApp.getContext().getPath());
         webAppData.setWebAppState(selectedWebApp.getState());
@@ -155,24 +188,34 @@ WebAppData webAppData = new WebAppData();
         Map<String, WebApplication> faultyWebAppMap = new HashMap<>();
         Map<String, WebApplication> stoppedWebAppMap = new HashMap<>();
         WebAppStatus webAppStatus = new WebAppStatus();
+        WebappAdmin webappAdmin = new WebappAdmin();
 
-        startedWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getStartedWebapps();
-        faultyWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getFaultyWebapps();
-        stoppedWebAppMap =
-                (ConcurrentHashMap) ((WebApplicationsHolder)
-                                             (getServerConfigurationContext().getProperty("carbon.webapps.holder"))).getStoppedWebapps();
-        if(!(startedWebAppMap.size()<=0)) {
-            webAppStatus.setStartedWebApps((startedWebAppMap.keySet()).toArray(new String[startedWebAppMap.keySet().size()]));
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.com");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("admin");
+
+
+        ConfigurationContextService configurationContext =
+                (ConfigurationContextService) PrivilegedCarbonContext.getThreadLocalCarbonContext().
+                        getOSGiService(ConfigurationContextService.class, null);
+        ConfigurationContext serverConfigurationContext = configurationContext.getServerConfigContext();
+        WebApplicationsHolder webApplicationsHolder = (WebApplicationsHolder) ((HashMap)
+           serverConfigurationContext.getLocalProperty("carbon.webapps.holderlist")).get("webapps");
+        startedWebAppMap =webApplicationsHolder.getStartedWebapps();
+        faultyWebAppMap =webApplicationsHolder.getFaultyWebapps();
+        stoppedWebAppMap =webApplicationsHolder.getStoppedWebapps();
+        if (!(startedWebAppMap.size() <= 0)) {
+            webAppStatus.setStartedWebApps((startedWebAppMap.keySet())
+                                                   .toArray(new String[startedWebAppMap.keySet().size()]));
         }
-        if(stoppedWebAppMap.size()<=0) {
-            webAppStatus.setStoppedWebApps((stoppedWebAppMap.keySet()).toArray(new String[startedWebAppMap.keySet().size()]));
+        if (stoppedWebAppMap.size() <= 0) {
+            webAppStatus.setStoppedWebApps((stoppedWebAppMap.keySet())
+                                                   .toArray(new String[startedWebAppMap.keySet().size()]));
         }
-        if(!(faultyWebAppMap.size()<=0)) {
-            webAppStatus.setFaultyWebApps((faultyWebAppMap.keySet()).toArray(new String[startedWebAppMap.keySet().size()]));
+        if (!(faultyWebAppMap.size() <= 0)) {
+            webAppStatus.setFaultyWebApps((faultyWebAppMap.keySet())
+                                                  .toArray(new String[startedWebAppMap.keySet().size()]));
         }
         return webAppStatus;
     }
@@ -180,7 +223,7 @@ WebAppData webAppData = new WebAppData();
     protected WebAppStatus getSuperTenantWebAppStatus(String webAppName) {
         WebAppStatus webAppStatus = new WebAppStatus();
         WebApplicationsHolder webApplicationsHolder = (WebApplicationsHolder) ((HashMap)
-                                                                                       getServerConfigurationContext().getLocalProperty(CARBON_WEBAPPS_HOLDER_LIST)).get(WEBAPPS);
+                                getServerConfigurationContext().getLocalProperty(CARBON_WEBAPPS_HOLDER_LIST)).get(WEBAPPS);
         Map<String, WebApplication> startedWebAppMap = webApplicationsHolder.getStartedWebapps();
         if (startedWebAppMap != null) {
             WebApplication webApplication = startedWebAppMap.get(webAppName);
